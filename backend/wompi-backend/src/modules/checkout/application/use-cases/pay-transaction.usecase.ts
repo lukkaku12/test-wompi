@@ -1,0 +1,84 @@
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { PRODUCT_REPOSITORY } from '@/modules/product/application/ports/product.repository.port';
+import type { ProductRepositoryPort } from '@/modules/product/application/ports/product.repository.port';
+import { TRANSACTION_REPOSITORY } from '@/modules/transaction/application/ports/transaction-repository.port';
+import type { TransactionRepositoryPort } from '@/modules/transaction/application/ports/transaction-repository.port';
+import { TransactionStatus } from '@/modules/transaction/domain/enums/transaction-status.enum';
+import { PAYMENT_GATEWAY } from '@/modules/checkout/application/ports/payment-gateway.port';
+import type { PaymentGatewayPort } from '@/modules/checkout/application/ports/payment-gateway.port';
+
+type PayTransactionInput = {
+  success?: boolean;
+  errorMessage?: string;
+};
+
+@Injectable()
+export class PayTransactionUseCase {
+  constructor(
+    @Inject(TRANSACTION_REPOSITORY)
+    private readonly transactionRepository: TransactionRepositoryPort,
+    @Inject(PRODUCT_REPOSITORY)
+    private readonly productRepository: ProductRepositoryPort,
+    @Inject(PAYMENT_GATEWAY)
+    private readonly paymentGateway: PaymentGatewayPort,
+  ) {}
+
+  async execute(id: string, payload: PayTransactionInput) {
+    const transaction = await this.transactionRepository.findById(id);
+    if (!transaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    if (transaction.status !== TransactionStatus.PENDING) {
+      throw new ConflictException('Transaction is not pending');
+    }
+
+    const paymentResult = await this.paymentGateway.charge({
+      amount: transaction.totalAmount,
+      forceResult: payload?.success === false ? 'failed' : 'success',
+      errorMessage: payload?.errorMessage,
+    });
+
+    if (paymentResult.success) {
+      const productId = transaction.product?.id;
+      if (!productId) {
+        throw new NotFoundException('Product not found');
+      }
+
+      const product = await this.productRepository.findById(productId);
+      if (!product) {
+        throw new NotFoundException('Product not found');
+      }
+
+      if (product.availableUnits <= 0) {
+        throw new ConflictException('Product out of stock');
+      }
+
+      product.availableUnits -= 1;
+      await this.productRepository.save(product);
+
+      transaction.status = TransactionStatus.SUCCESS;
+      transaction.wompiReference = paymentResult.wompiReference ?? null;
+      transaction.errorMessage = null;
+    } else {
+      transaction.status = TransactionStatus.FAILED;
+      transaction.wompiReference = null;
+      transaction.errorMessage =
+        paymentResult.errorMessage ?? 'Payment failed';
+    }
+
+    await this.transactionRepository.save(transaction);
+
+    return {
+      transactionId: transaction.id,
+      status: transaction.status,
+      wompiReference: transaction.wompiReference ?? null,
+      errorMessage: transaction.errorMessage ?? null,
+    };
+  }
+}
