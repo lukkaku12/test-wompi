@@ -1,11 +1,13 @@
+// Base URL for the backend API.
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL?.toString().replace(/\/$/, '') ??
   'http://localhost:3000'
 
-export async function client<T>(
+// Small fetch helper that returns JSON or throws an error.
+export async function client<T = unknown>(
   path: string,
   options: RequestInit = {},
-): Promise<T> {
+) {
   const url = `${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`
   const response = await fetch(url, {
     ...options,

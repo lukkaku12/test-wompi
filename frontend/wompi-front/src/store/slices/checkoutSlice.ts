@@ -1,16 +1,16 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { getProducts, type Product } from '../../services/api/products'
 
-type CheckoutStatus = 'idle' | 'loading' | 'succeeded' | 'failed'
-
+// This slice stores the product list and selection.
 export type CheckoutState = {
   currentStep: number
   products: Product[]
-  status: CheckoutStatus
+  status: 'idle' | 'loading' | 'succeeded' | 'failed'
   selectedProductId: string | null
   errorMessage: string | null
 }
 
+// Default values when the app starts.
 const initialState: CheckoutState = {
   currentStep: 1,
   products: [],
@@ -19,17 +19,15 @@ const initialState: CheckoutState = {
   errorMessage: null,
 }
 
-export const fetchProducts = createAsyncThunk<
-  Product[],
-  void,
-  { rejectValue: string }
->('checkout/fetchProducts', async (_, { rejectWithValue }) => {
+// Load products from the API and store them in Redux.
+export const fetchProducts = createAsyncThunk<Product[], void, { rejectValue: string }>('checkout/fetchProducts', async (_, { rejectWithValue }) => {
   try {
     return await getProducts()
   } catch (error) {
-    const message =
+    // Turn any failure into a simple string error message.
+    const errorMessage =
       error instanceof Error ? error.message : 'Unable to load products'
-    return rejectWithValue(message)
+    return rejectWithValue(errorMessage)
   }
 })
 
@@ -38,6 +36,7 @@ const checkoutSlice = createSlice({
   initialState,
   reducers: {
     setSelectedProductId(state, action: PayloadAction<string>) {
+      // Save the selected product id.
       state.selectedProductId = action.payload
     },
   },

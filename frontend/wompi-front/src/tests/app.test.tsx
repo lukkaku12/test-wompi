@@ -11,6 +11,22 @@ let mockState = {
     errorMessage: null as string | null,
     selectedProductId: null as string | null,
   },
+  form: {
+    isSheetOpen: false,
+    values: {
+      cardName: '',
+      cardNumber: '',
+      expiry: '',
+      cvv: '',
+      fullName: '',
+      email: '',
+      phone: '',
+      address: '',
+      city: '',
+      notes: '',
+    },
+    errors: {},
+  },
 }
 
 const { fetchProductsMock, setSelectedProductIdMock } = vi.hoisted(() => ({
@@ -47,6 +63,22 @@ describe('App', () => {
         errorMessage: null,
         selectedProductId: null,
       },
+      form: {
+        isSheetOpen: false,
+        values: {
+          cardName: '',
+          cardNumber: '',
+          expiry: '',
+          cvv: '',
+          fullName: '',
+          email: '',
+          phone: '',
+          address: '',
+          city: '',
+          notes: '',
+        },
+        errors: {},
+      },
     }
 
     render(<App />)
@@ -65,6 +97,22 @@ describe('App', () => {
         status: 'failed',
         errorMessage: null,
         selectedProductId: null,
+      },
+      form: {
+        isSheetOpen: false,
+        values: {
+          cardName: '',
+          cardNumber: '',
+          expiry: '',
+          cvv: '',
+          fullName: '',
+          email: '',
+          phone: '',
+          address: '',
+          city: '',
+          notes: '',
+        },
+        errors: {},
       },
     }
 
@@ -90,6 +138,22 @@ describe('App', () => {
         status: 'succeeded',
         errorMessage: null,
         selectedProductId: null,
+      },
+      form: {
+        isSheetOpen: false,
+        values: {
+          cardName: '',
+          cardNumber: '',
+          expiry: '',
+          cvv: '',
+          fullName: '',
+          email: '',
+          phone: '',
+          address: '',
+          city: '',
+          notes: '',
+        },
+        errors: {},
       },
     }
 
