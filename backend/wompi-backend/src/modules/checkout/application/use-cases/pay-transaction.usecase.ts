@@ -98,10 +98,16 @@ export class PayTransactionUseCase {
       transaction.wompiReference = paymentResult.wompiReference ?? null;
       transaction.errorMessage = null;
     } else {
-      transaction.status = TransactionStatus.FAILED;
-      transaction.wompiReference = null;
-      transaction.errorMessage =
-        paymentResult.errorMessage ?? 'Payment failed';
+      const errorMessage = paymentResult.errorMessage ?? 'Payment failed';
+      if (errorMessage.toLowerCase().includes('acceptance token')) {
+        transaction.status = TransactionStatus.PENDING;
+        transaction.wompiReference = paymentResult.wompiReference ?? null;
+        transaction.errorMessage = errorMessage;
+      } else {
+        transaction.status = TransactionStatus.FAILED;
+        transaction.wompiReference = null;
+        transaction.errorMessage = errorMessage;
+      }
     }
 
     await this.transactionRepository.save(transaction);

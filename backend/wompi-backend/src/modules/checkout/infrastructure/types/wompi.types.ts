@@ -4,6 +4,7 @@ export type WompiPaymentSourceResponse = {
   };
   error?: {
     message?: string;
+    messages?: Record<string, string[]>;
   };
 };
 

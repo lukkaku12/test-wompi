@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import './App.css'
 import CheckoutFormSheet from './components/CheckoutFormSheet'
 import ProductScreen from './components/ProductScreen'
@@ -14,6 +14,13 @@ import {
 } from './store/slices/checkoutSlice'
 import { resetForm, setSheetOpen } from './store/slices/formSlice'
 import { createCardToken, resetWompi } from './store/slices/wompiSlice'
+import {
+  createTransactionThunk,
+  pollTransaction,
+  payTransactionThunk,
+  recoverTransactionThunk,
+  resetTransaction,
+} from './store/slices/transactionSlice'
 
 function App() {
   const dispatch = useAppDispatch()
@@ -34,6 +41,13 @@ function App() {
     (state) => state.wompi.personalAuthToken,
   )
   const cardToken = useAppSelector((state) => state.wompi.cardToken)
+  const { transactionId, pollStatus } = useAppSelector(
+    (state) => state.transaction,
+  )
+  const transactionError = useAppSelector(
+    (state) => state.transaction.errorMessage,
+  )
+  const initialTransactionId = useRef(transactionId)
   const selectedProduct =
     products.find((product) => product.id === selectedProductId) ?? null
   const publicKey = import.meta.env.VITE_WOMPI_PUBLIC_KEY ?? ''
@@ -50,6 +64,41 @@ function App() {
   useEffect(() => {
     dispatch(fetchProducts())
   }, [dispatch])
+
+  useEffect(() => {
+    if (!initialTransactionId.current) {
+      return
+    }
+
+    dispatch(
+      recoverTransactionThunk({ transactionId: initialTransactionId.current }),
+    )
+      .unwrap()
+      .then((result) => {
+        dispatch(setTransactionStatus(result.status))
+        dispatch(setCurrentStep(4))
+      })
+      .catch(() => {
+        dispatch(resetTransaction())
+        dispatch(resetCheckout())
+      })
+  }, [dispatch])
+
+  useEffect(() => {
+    if (currentStep >= 4 && transactionStatus === 'PENDING' && transactionId) {
+      // Start polling only once when the status is pending.
+      if (pollStatus === 'idle') {
+        dispatch(pollTransaction({ transactionId }))
+          .unwrap()
+          .then((result) => {
+            dispatch(setTransactionStatus(result.status))
+          })
+          .catch(() => {
+            dispatch(setTransactionStatus('FAILED'))
+          })
+      }
+    }
+  }, [dispatch, currentStep, transactionStatus, transactionId, pollStatus])
 
   return (
     <div className="app">
@@ -120,10 +169,15 @@ function App() {
                 dispatch(setCurrentStep(4))
                 return
               }
+              if (!transactionId) {
+                dispatch(setTransactionStatus('FAILED'))
+                dispatch(setCurrentStep(4))
+                return
+              }
 
               try {
                 // If tokenization succeeds, we can move forward.
-                await dispatch(
+                const tokenResult = await dispatch(
                   createCardToken({
                     publicKey,
                     cardNumber: formValues.cardNumber,
@@ -133,7 +187,18 @@ function App() {
                   }),
                 ).unwrap()
 
-                dispatch(setTransactionStatus('PENDING'))
+                const payResult = await dispatch(
+                  payTransactionThunk({
+                    transactionId,
+                    payload: {
+                      cardToken: tokenResult.cardToken,
+                      acceptanceToken,
+                      acceptPersonalAuth: personalAuthToken,
+                    },
+                  }),
+                ).unwrap()
+
+                dispatch(setTransactionStatus(payResult.status))
               } catch {
                 dispatch(setTransactionStatus('FAILED'))
               }
@@ -144,15 +209,25 @@ function App() {
         )}
 
         {status === 'succeeded' && currentStep >= 4 && (
-          <StatusScreen
-            status={transactionStatus}
-            onReturn={() => {
-              // Reset the flow to start again.
-              dispatch(resetCheckout())
-              dispatch(resetForm())
-              dispatch(resetWompi())
-            }}
-          />
+          <>
+            <StatusScreen
+              status={transactionStatus}
+              errorMessage={transactionError}
+              onReturn={() => {
+                // Reset the flow to start again.
+                if (transactionStatus === 'SUCCESS') {
+                  dispatch(fetchProducts())
+                }
+                dispatch(resetCheckout())
+                dispatch(resetForm())
+                dispatch(resetWompi())
+                dispatch(resetTransaction())
+              }}
+            />
+            {transactionStatus === 'PENDING' && (
+              <p className="status-note">Checking transaction status...</p>
+            )}
+          </>
         )}
       </section>
 
@@ -163,8 +238,36 @@ function App() {
           dispatch(setCurrentStep(1))
         }}
         onContinue={() => {
-          dispatch(setSheetOpen(false))
-          dispatch(setCurrentStep(3))
+          if (!selectedProductId) {
+            return
+          }
+
+          dispatch(
+            createTransactionThunk({
+              productId: selectedProductId,
+              baseFee,
+              deliveryFee,
+              customer: {
+                fullName: formValues.fullName,
+                email: formValues.email,
+                phone: formValues.phone,
+                address: formValues.address,
+                city: formValues.city,
+                notes: formValues.notes || undefined,
+              },
+            }),
+          )
+            .unwrap()
+            .then((result) => {
+              dispatch(setTransactionStatus(result.status))
+              dispatch(setSheetOpen(false))
+              dispatch(setCurrentStep(3))
+            })
+            .catch(() => {
+              dispatch(setTransactionStatus('FAILED'))
+              dispatch(setSheetOpen(false))
+              dispatch(setCurrentStep(4))
+            })
         }}
       />
     </div>

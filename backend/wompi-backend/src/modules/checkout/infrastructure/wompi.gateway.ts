@@ -99,13 +99,25 @@ export class WompiGateway implements PaymentGatewayPort {
     const payload = (await response.json()) as WompiPaymentSourceResponse;
 
     if (!response.ok || !payload?.data?.id) {
+      const tokenPrefix = input.cardToken?.slice(0, 10);
+      const acceptancePrefix = input.acceptanceToken?.slice(0, 10);
+      const personalAuthPrefix = input.acceptPersonalAuth?.slice(0, 10);
       // Log provider payload for debugging failed payment source creation.
       // Avoid logging full card data (only token is used here).
       console.error('[Wompi] payment_source failed', {
         status: response.status,
         error: payload?.error ?? null,
         data: payload?.data ?? null,
+        tokenPrefix,
+        acceptancePrefix,
+        personalAuthPrefix,
       });
+      if (payload?.error?.messages?.acceptance_token) {
+        return {
+          success: false,
+          errorMessage: 'Invalid acceptance token',
+        };
+      }
       return {
         success: false,
         errorMessage:

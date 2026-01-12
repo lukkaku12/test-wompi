@@ -43,6 +43,13 @@ let mockState = {
     cardToken: 'card-token',
     errorMessage: null,
   },
+  transaction: {
+    transactionId: 'tx-1',
+    pollStatus: 'idle',
+    lastStatus: null,
+    attempts: 0,
+    errorMessage: null,
+  },
 }
 
 const {
@@ -55,6 +62,8 @@ const {
   resetFormMock,
   createCardTokenMock,
   resetWompiMock,
+  pollTransactionMock,
+  resetTransactionMock,
 } = vi.hoisted(() => ({
   fetchProductsMock: vi.fn(() => ({ type: 'checkout/fetchProducts' })),
   setSelectedProductIdMock: vi.fn((id: string) => ({
@@ -77,6 +86,8 @@ const {
   resetFormMock: vi.fn(() => ({ type: 'form/resetForm' })),
   createCardTokenMock: vi.fn(() => ({ type: 'wompi/createCardToken' })),
   resetWompiMock: vi.fn(() => ({ type: 'wompi/resetWompi' })),
+  pollTransactionMock: vi.fn(() => ({ type: 'transaction/poll' })),
+  resetTransactionMock: vi.fn(() => ({ type: 'transaction/resetTransaction' })),
 }))
 
 vi.mock('../store/hooks', () => ({
@@ -103,6 +114,11 @@ vi.mock('../store/slices/wompiSlice', () => ({
   resetWompi: resetWompiMock,
 }))
 
+vi.mock('../store/slices/transactionSlice', () => ({
+  pollTransaction: pollTransactionMock,
+  resetTransaction: resetTransactionMock,
+}))
+
 describe('App', () => {
   beforeEach(() => {
     mockDispatch.mockClear()
@@ -119,6 +135,10 @@ describe('App', () => {
       checkout: {
         ...mockState.checkout,
         status: 'loading',
+      },
+      transaction: {
+        ...mockState.transaction,
+        pollStatus: 'idle',
       },
     }
 
@@ -137,6 +157,10 @@ describe('App', () => {
       checkout: {
         ...mockState.checkout,
         status: 'failed',
+      },
+      transaction: {
+        ...mockState.transaction,
+        pollStatus: 'idle',
       },
     }
 
@@ -162,6 +186,10 @@ describe('App', () => {
         status: 'succeeded',
         selectedProductId: null,
         currentStep: 1,
+      },
+      transaction: {
+        ...mockState.transaction,
+        pollStatus: 'idle',
       },
     }
 
@@ -197,6 +225,10 @@ describe('App', () => {
         selectedProductId: 'prod-1',
         currentStep: 3,
       },
+      transaction: {
+        ...mockState.transaction,
+        pollStatus: 'idle',
+      },
     }
 
     render(<App />)
@@ -207,5 +239,26 @@ describe('App', () => {
     expect(createCardTokenMock).toHaveBeenCalled()
     expect(setTransactionStatusMock).toHaveBeenCalledWith('PENDING')
     expect(setCurrentStepMock).toHaveBeenCalledWith(4)
+  })
+
+  it('starts polling when the status screen is pending', () => {
+    mockState = {
+      ...mockState,
+      checkout: {
+        ...mockState.checkout,
+        status: 'succeeded',
+        currentStep: 4,
+        transactionStatus: 'PENDING',
+      },
+      transaction: {
+        ...mockState.transaction,
+        transactionId: 'tx-1',
+        pollStatus: 'idle',
+      },
+    }
+
+    render(<App />)
+
+    expect(pollTransactionMock).toHaveBeenCalledWith({ transactionId: 'tx-1' })
   })
 })
