@@ -5,25 +5,10 @@ import type {
   PaymentRequest,
   PaymentResult,
 } from '../application/ports/payment-gateway.port';
-
-type WompiPaymentSourceResponse = {
-  data?: {
-    id?: string;
-  };
-  error?: {
-    message?: string;
-  };
-};
-
-type WompiTransactionResponse = {
-  data?: {
-    id?: string;
-    status?: string;
-  };
-  error?: {
-    message?: string;
-  };
-};
+import type {
+  WompiPaymentSourceResponse,
+  WompiTransactionResponse,
+} from './types/wompi.types';
 
 @Injectable()
 export class WompiGateway implements PaymentGatewayPort {

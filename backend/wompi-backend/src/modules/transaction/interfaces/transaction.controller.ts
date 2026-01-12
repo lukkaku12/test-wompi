@@ -9,26 +9,10 @@ import {
 import { CreateTransactionUseCase } from '../../checkout/application/use-cases/create-transaction.usecase';
 import { GetTransactionUseCase } from '../../checkout/application/use-cases/get-transaction.usecase';
 import { PayTransactionUseCase } from '../../checkout/application/use-cases/pay-transaction.usecase';
-
-type CreateTransactionBody = {
-  productId: string;
-  baseFee?: number;
-  deliveryFee?: number;
-  customer: {
-    fullName: string;
-    email: string;
-    phone: string;
-    address: string;
-    city: string;
-    notes?: string;
-  };
-};
-
-type PayTransactionBody = {
-  cardToken: string;
-  acceptanceToken: string;
-  acceptPersonalAuth: string;
-};
+import type {
+  CreateTransactionInput,
+  PayTransactionInput,
+} from '../../checkout/domain/types/checkout.types';
 
 @Controller('transactions')
 export class TransactionsController {
@@ -39,7 +23,7 @@ export class TransactionsController {
   ) {}
 
   @Post()
-  async createTransaction(@Body() body: CreateTransactionBody) {
+  async createTransaction(@Body() body: CreateTransactionInput) {
     return this.createTransactionUseCase.execute(body);
   }
 
@@ -51,7 +35,7 @@ export class TransactionsController {
   @Post(':id/pay')
   async payTransaction(
     @Param('id') id: string,
-    @Body() body: PayTransactionBody,
+    @Body() body: PayTransactionInput,
   ) {
     return this.payTransactionUseCase.execute(id, body);
   }

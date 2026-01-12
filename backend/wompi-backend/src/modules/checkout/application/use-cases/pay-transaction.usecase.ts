@@ -11,12 +11,7 @@ import type { TransactionRepositoryPort } from '@/modules/transaction/applicatio
 import { TransactionStatus } from '@/modules/transaction/domain/enums/transaction-status.enum';
 import { PAYMENT_GATEWAY } from '@/modules/checkout/application/ports/payment-gateway.port';
 import type { PaymentGatewayPort } from '@/modules/checkout/application/ports/payment-gateway.port';
-
-type PayTransactionInput = {
-  cardToken: string;
-  acceptanceToken: string;
-  acceptPersonalAuth: string;
-};
+import type { PayTransactionInput } from '@/modules/checkout/domain/types/checkout.types';
 
 @Injectable()
 export class PayTransactionUseCase {

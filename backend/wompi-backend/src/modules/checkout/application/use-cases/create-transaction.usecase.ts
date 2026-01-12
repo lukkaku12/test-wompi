@@ -13,20 +13,7 @@ import type { CustomerRepositoryPort } from '@/modules/customer/application/port
 import { TRANSACTION_REPOSITORY } from '@/modules/transaction/application/ports/transaction-repository.port';
 import type { TransactionRepositoryPort } from '@/modules/transaction/application/ports/transaction-repository.port';
 import { TransactionStatus } from '@/modules/transaction/domain/enums/transaction-status.enum';
-
-type CreateTransactionInput = {
-  productId: string;
-  baseFee?: number;
-  deliveryFee?: number;
-  customer: {
-    fullName: string;
-    email: string;
-    phone: string;
-    address: string;
-    city: string;
-    notes?: string;
-  };
-};
+import type { CreateTransactionInput } from '@/modules/checkout/domain/types/checkout.types';
 
 @Injectable()
 export class CreateTransactionUseCase {
