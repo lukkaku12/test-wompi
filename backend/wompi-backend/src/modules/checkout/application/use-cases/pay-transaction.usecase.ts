@@ -35,10 +35,12 @@ export class PayTransactionUseCase {
       throw new NotFoundException('Transaction not found');
     }
 
+    // Only PENDING transactions can be paid.
     if (transaction.status !== TransactionStatus.PENDING) {
       throw new ConflictException('Transaction is not pending');
     }
 
+    // Payment credentials come from the frontend tokenization flow.
     if (
       !payload?.cardToken ||
       !payload?.acceptanceToken ||
@@ -47,6 +49,7 @@ export class PayTransactionUseCase {
       throw new ConflictException('Missing payment credentials');
     }
 
+    // Delegate external payment processing to the gateway adapter.
     const paymentResult = await this.paymentGateway.charge({
       amount: transaction.totalAmount,
       customerEmail: transaction.customer.email,
@@ -57,6 +60,7 @@ export class PayTransactionUseCase {
     });
 
     if (paymentResult.success) {
+      // Stock is reduced only after the payment is confirmed.
       const productId = transaction.product?.id;
       if (!productId) {
         throw new NotFoundException('Product not found');

@@ -40,6 +40,7 @@ export class CreateTransactionUseCase {
   ) {}
 
   async execute(payload: CreateTransactionInput) {
+    // To create a transaction its needed to have a product and a customer mail
     if (!payload?.productId) {
       throw new BadRequestException('productId is required');
     }
@@ -47,6 +48,7 @@ export class CreateTransactionUseCase {
       throw new BadRequestException('customer.email is required');
     }
 
+    // Product availability is checked before any customer or transaction writes.
     const product = await this.productRepository.findById(payload.productId);
     if (!product) {
       throw new NotFoundException('Product not found');
@@ -55,6 +57,7 @@ export class CreateTransactionUseCase {
       throw new ConflictException('Product out of stock');
     }
 
+    // Customer is upserted by email to keep checkout guest-based.
     const existingCustomer = await this.customerRepository.findByEmail(
       payload.customer.email,
     );
@@ -63,6 +66,7 @@ export class CreateTransactionUseCase {
       : this.customerRepository.create(payload.customer);
     await this.customerRepository.save(customer);
 
+    // Fees are treated as optional and default to 0.
     const baseFee = Number(payload.baseFee ?? 0);
     const deliveryFee = Number(payload.deliveryFee ?? 0);
 
@@ -73,6 +77,7 @@ export class CreateTransactionUseCase {
     const amount = product.price;
     const totalAmount = amount + baseFee + deliveryFee;
 
+    // Transaction starts in PENDING until payment confirms.
     const transaction = this.transactionRepository.create({
       product,
       customer,
