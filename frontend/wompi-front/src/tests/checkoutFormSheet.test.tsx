@@ -5,11 +5,25 @@ import { Provider } from 'react-redux'
 import { describe, expect, it, vi } from 'vitest'
 import CheckoutFormSheet from '../components/CheckoutFormSheet'
 import formReducer from '../store/slices/formSlice'
+import wompiReducer from '../store/slices/wompiSlice'
 
 const renderSheet = (onClose = () => {}, onContinue = () => {}) => {
   const store = configureStore({
     reducer: {
       form: formReducer,
+      wompi: wompiReducer,
+    },
+    preloadedState: {
+      wompi: {
+        acceptanceToken: 'acceptance-token',
+        personalAuthToken: 'personal-token',
+        acceptancePermalink: 'https://example.com/terms',
+        personalAuthPermalink: 'https://example.com/personal',
+        acceptanceStatus: 'succeeded',
+        tokenStatus: 'idle',
+        cardToken: null,
+        errorMessage: null,
+      },
     },
   })
 
@@ -81,6 +95,8 @@ describe('CheckoutFormSheet', () => {
     fireEvent.change(screen.getByLabelText('City'), {
       target: { value: 'Bogota' },
     })
+    fireEvent.click(screen.getByLabelText(/terms and conditions/i))
+    fireEvent.click(screen.getByLabelText(/personal data policy/i))
 
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
 

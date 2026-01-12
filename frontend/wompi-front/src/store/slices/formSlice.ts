@@ -12,6 +12,8 @@ export type FormValues = {
   address: string;
   city: string;
   notes: string;
+  acceptTerms: boolean;
+  acceptPersonalAuth: boolean;
 };
 
 // Optional error messages for each input.
@@ -26,6 +28,8 @@ export type FormErrors = {
   address?: string;
   city?: string;
   notes?: string;
+  acceptTerms?: string;
+  acceptPersonalAuth?: string;
 };
 
 // Full state for the form section.
@@ -48,6 +52,8 @@ const initialState: FormState = {
     address: "",
     city: "",
     notes: "",
+    acceptTerms: false,
+    acceptPersonalAuth: false,
   },
   errors: {},
   isSheetOpen: false,
@@ -60,7 +66,7 @@ const formSlice = createSlice({
   reducers: {
     setField(
       state,
-      action: PayloadAction<{ field: keyof FormValues; value: string }>
+      action: PayloadAction<{ field: keyof FormValues; value: string | boolean }>
     ) {
       // Update one input as the user types.
       state.values[action.payload.field] = action.payload.value;

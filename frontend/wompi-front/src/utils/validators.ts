@@ -103,5 +103,13 @@ export const validateForm = (values: FormValues): FormErrors => {
     errors.city = 'This field is required'
   }
 
+  if (!values.acceptTerms) {
+    errors.acceptTerms = 'You need to accept the terms'
+  }
+
+  if (!values.acceptPersonalAuth) {
+    errors.acceptPersonalAuth = 'You need to accept the data policy'
+  }
+
   return errors
 }

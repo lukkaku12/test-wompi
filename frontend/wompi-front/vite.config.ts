@@ -8,4 +8,15 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
   },
+  server: {
+    proxy: {
+      // Proxy Wompi calls so we don't hit CORS in dev.
+      '/wompi': {
+        target: 'https://api-sandbox.co.uat.wompi.dev',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/wompi/, ''),
+      },
+    },
+  },
 })

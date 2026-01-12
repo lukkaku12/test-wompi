@@ -1,12 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit'
 import checkoutReducer from './slices/checkoutSlice'
 import formReducer from './slices/formSlice'
+import wompiReducer from './slices/wompiSlice'
 
 // The Redux store is the main box that holds all app state.
 export const store = configureStore({
   reducer: {
     checkout: checkoutReducer,
     form: formReducer,
+    wompi: wompiReducer,
   },
 })
 

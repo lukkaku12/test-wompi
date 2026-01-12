@@ -13,6 +13,7 @@ import {
   setTransactionStatus,
 } from './store/slices/checkoutSlice'
 import { resetForm, setSheetOpen } from './store/slices/formSlice'
+import { createCardToken, resetWompi } from './store/slices/wompiSlice'
 
 function App() {
   const dispatch = useAppDispatch()
@@ -27,8 +28,15 @@ function App() {
     transactionStatus,
   } = useAppSelector((state) => state.checkout)
   const isSheetOpen = useAppSelector((state) => state.form.isSheetOpen)
+  const formValues = useAppSelector((state) => state.form.values)
+  const acceptanceToken = useAppSelector((state) => state.wompi.acceptanceToken)
+  const personalAuthToken = useAppSelector(
+    (state) => state.wompi.personalAuthToken,
+  )
+  const cardToken = useAppSelector((state) => state.wompi.cardToken)
   const selectedProduct =
     products.find((product) => product.id === selectedProductId) ?? null
+  const publicKey = import.meta.env.VITE_WOMPI_PUBLIC_KEY ?? ''
 
   const stepLabel =
     currentStep >= 4
@@ -105,9 +113,31 @@ function App() {
             product={selectedProduct}
             baseFee={baseFee}
             deliveryFee={deliveryFee}
-            onConfirm={() => {
-              // Step 4 shows the status screen (no payment call yet).
-              dispatch(setTransactionStatus('PENDING'))
+            onConfirm={async () => {
+              // Tokenize the card, then move to the status screen.
+              if (!publicKey || !acceptanceToken || !personalAuthToken) {
+                dispatch(setTransactionStatus('FAILED'))
+                dispatch(setCurrentStep(4))
+                return
+              }
+
+              try {
+                // If tokenization succeeds, we can move forward.
+                await dispatch(
+                  createCardToken({
+                    publicKey,
+                    cardNumber: formValues.cardNumber,
+                    cvv: formValues.cvv,
+                    expiry: formValues.expiry,
+                    cardName: formValues.cardName,
+                  }),
+                ).unwrap()
+
+                dispatch(setTransactionStatus('PENDING'))
+              } catch {
+                dispatch(setTransactionStatus('FAILED'))
+              }
+
               dispatch(setCurrentStep(4))
             }}
           />
@@ -120,6 +150,7 @@ function App() {
               // Reset the flow to start again.
               dispatch(resetCheckout())
               dispatch(resetForm())
+              dispatch(resetWompi())
             }}
           />
         )}

@@ -13,6 +13,8 @@ const baseValues: FormValues = {
   address: '',
   city: '',
   notes: '',
+  acceptTerms: false,
+  acceptPersonalAuth: false,
 }
 
 describe('validators', () => {
@@ -43,6 +45,8 @@ describe('validators', () => {
       address: 'Street 123',
       city: 'Bogota',
       notes: 'Leave at door',
+      acceptTerms: true,
+      acceptPersonalAuth: true,
     }
 
     const errors = validateForm(values)

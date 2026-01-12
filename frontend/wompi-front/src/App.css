@@ -296,6 +296,22 @@
   cursor: pointer;
 }
 
+.sheet-continue:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.field-check {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  color: var(--ink-soft);
+}
+
+.field-check input {
+  margin-top: 0.2rem;
+}
+
 .summary {
   display: flex;
   flex-direction: column;

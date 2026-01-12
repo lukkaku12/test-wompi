@@ -28,8 +28,20 @@ let mockState = {
       address: '',
       city: '',
       notes: '',
+      acceptTerms: false,
+      acceptPersonalAuth: false,
     },
     errors: {},
+  },
+  wompi: {
+    acceptanceToken: 'acceptance-token',
+    personalAuthToken: 'personal-token',
+    acceptancePermalink: 'https://example.com/terms',
+    personalAuthPermalink: 'https://example.com/personal',
+    acceptanceStatus: 'succeeded',
+    tokenStatus: 'succeeded',
+    cardToken: 'card-token',
+    errorMessage: null,
   },
 }
 
@@ -41,6 +53,8 @@ const {
   setTransactionStatusMock,
   resetCheckoutMock,
   resetFormMock,
+  createCardTokenMock,
+  resetWompiMock,
 } = vi.hoisted(() => ({
   fetchProductsMock: vi.fn(() => ({ type: 'checkout/fetchProducts' })),
   setSelectedProductIdMock: vi.fn((id: string) => ({
@@ -61,6 +75,8 @@ const {
   })),
   resetCheckoutMock: vi.fn(() => ({ type: 'checkout/resetCheckout' })),
   resetFormMock: vi.fn(() => ({ type: 'form/resetForm' })),
+  createCardTokenMock: vi.fn(() => ({ type: 'wompi/createCardToken' })),
+  resetWompiMock: vi.fn(() => ({ type: 'wompi/resetWompi' })),
 }))
 
 vi.mock('../store/hooks', () => ({
@@ -82,40 +98,27 @@ vi.mock('../store/slices/formSlice', () => ({
   resetForm: resetFormMock,
 }))
 
+vi.mock('../store/slices/wompiSlice', () => ({
+  createCardToken: createCardTokenMock,
+  resetWompi: resetWompiMock,
+}))
+
 describe('App', () => {
   beforeEach(() => {
     mockDispatch.mockClear()
     fetchProductsMock.mockClear()
     setSelectedProductIdMock.mockClear()
+    setCurrentStepMock.mockClear()
+    setTransactionStatusMock.mockClear()
+    createCardTokenMock.mockClear()
   })
 
   it('dispatches fetchProducts and shows loading', () => {
     mockState = {
+      ...mockState,
       checkout: {
-        products: [],
+        ...mockState.checkout,
         status: 'loading',
-        errorMessage: null,
-        selectedProductId: null,
-        currentStep: 1,
-        baseFee: 1500,
-        deliveryFee: 3500,
-        transactionStatus: 'PENDING',
-      },
-      form: {
-        isSheetOpen: false,
-        values: {
-          cardName: '',
-          cardNumber: '',
-          expiry: '',
-          cvv: '',
-          fullName: '',
-          email: '',
-          phone: '',
-          address: '',
-          city: '',
-          notes: '',
-        },
-        errors: {},
       },
     }
 
@@ -130,44 +133,23 @@ describe('App', () => {
 
   it('shows an error message when the fetch fails', () => {
     mockState = {
+      ...mockState,
       checkout: {
-        products: [],
+        ...mockState.checkout,
         status: 'failed',
-        errorMessage: null,
-        selectedProductId: null,
-        currentStep: 1,
-        baseFee: 1500,
-        deliveryFee: 3500,
-        transactionStatus: 'PENDING',
-      },
-      form: {
-        isSheetOpen: false,
-        values: {
-          cardName: '',
-          cardNumber: '',
-          expiry: '',
-          cvv: '',
-          fullName: '',
-          email: '',
-          phone: '',
-          address: '',
-          city: '',
-          notes: '',
-        },
-        errors: {},
       },
     }
 
     render(<App />)
 
-    expect(
-      screen.getByText('Unable to load products'),
-    ).toBeInTheDocument()
+    expect(screen.getByText('Unable to load products')).toBeInTheDocument()
   })
 
   it('renders products and handles selection', async () => {
     mockState = {
+      ...mockState,
       checkout: {
+        ...mockState.checkout,
         products: [
           {
             id: 'prod-1',
@@ -178,28 +160,8 @@ describe('App', () => {
           },
         ],
         status: 'succeeded',
-        errorMessage: null,
         selectedProductId: null,
         currentStep: 1,
-        baseFee: 1500,
-        deliveryFee: 3500,
-        transactionStatus: 'PENDING',
-      },
-      form: {
-        isSheetOpen: false,
-        values: {
-          cardName: '',
-          cardNumber: '',
-          expiry: '',
-          cvv: '',
-          fullName: '',
-          email: '',
-          phone: '',
-          address: '',
-          city: '',
-          notes: '',
-        },
-        errors: {},
       },
     }
 
@@ -219,7 +181,9 @@ describe('App', () => {
 
   it('moves to the next step when confirming the summary', () => {
     mockState = {
+      ...mockState,
       checkout: {
+        ...mockState.checkout,
         products: [
           {
             id: 'prod-1',
@@ -230,28 +194,8 @@ describe('App', () => {
           },
         ],
         status: 'succeeded',
-        errorMessage: null,
         selectedProductId: 'prod-1',
         currentStep: 3,
-        baseFee: 1500,
-        deliveryFee: 3500,
-        transactionStatus: 'PENDING',
-      },
-      form: {
-        isSheetOpen: false,
-        values: {
-          cardName: '',
-          cardNumber: '',
-          expiry: '',
-          cvv: '',
-          fullName: '',
-          email: '',
-          phone: '',
-          address: '',
-          city: '',
-          notes: '',
-        },
-        errors: {},
       },
     }
 
@@ -260,11 +204,8 @@ describe('App', () => {
     const button = screen.getByRole('button', { name: 'Confirm' })
     button.click()
 
+    expect(createCardTokenMock).toHaveBeenCalled()
     expect(setTransactionStatusMock).toHaveBeenCalledWith('PENDING')
     expect(setCurrentStepMock).toHaveBeenCalledWith(4)
-    expect(mockDispatch).toHaveBeenCalledWith({
-      type: 'checkout/setCurrentStep',
-      payload: 4,
-    })
   })
 })

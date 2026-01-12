@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import {
   clearErrors,
@@ -6,6 +7,7 @@ import {
   setField,
 } from '../store/slices/formSlice'
 import { detectCardBrand, validateForm } from '../utils/validators'
+import { fetchAcceptance } from '../store/slices/wompiSlice'
 
 type CheckoutFormSheetProps = {
   isOpen: boolean
@@ -20,7 +22,26 @@ const CheckoutFormSheet = ({
 }: CheckoutFormSheetProps) => {
   const dispatch = useAppDispatch()
   const { values, errors } = useAppSelector((state) => state.form)
+  const {
+    acceptanceStatus,
+    acceptancePermalink,
+    personalAuthPermalink,
+    acceptanceToken,
+    personalAuthToken,
+  } = useAppSelector((state) => state.wompi)
   const brand = detectCardBrand(values.cardNumber)
+  const publicKey = import.meta.env.VITE_WOMPI_PUBLIC_KEY ?? ''
+  const canContinue =
+    values.acceptTerms &&
+    values.acceptPersonalAuth &&
+    acceptanceStatus === 'succeeded'
+
+  useEffect(() => {
+    if (isOpen && publicKey && acceptanceStatus === 'idle') {
+      // Fetch Wompi acceptance info when the sheet opens.
+      dispatch(fetchAcceptance(publicKey))
+    }
+  }, [dispatch, isOpen, publicKey, acceptanceStatus])
 
   if (!isOpen) {
     return null
@@ -41,13 +62,26 @@ const CheckoutFormSheet = ({
       }
     }
 
+  const handleCheckbox =
+    (field: 'acceptTerms' | 'acceptPersonalAuth') =>
+    (event: { target: { checked: boolean } }) => {
+      dispatch(setField({ field, value: event.target.checked }))
+
+      if (errors[field]) {
+        dispatch(clearFieldError(field))
+      }
+    }
+
   const handleContinue = () => {
     // Run all validations and surface the errors in the UI.
     const validationErrors = validateForm(values)
     dispatch(setErrors(validationErrors))
 
     const hasErrors = Object.keys(validationErrors).length > 0
-    if (!hasErrors) {
+    const acceptanceReady =
+      acceptanceStatus === 'succeeded' && acceptanceToken && personalAuthToken
+
+    if (!hasErrors && acceptanceReady) {
       onContinue()
     }
   }
@@ -214,8 +248,58 @@ const CheckoutFormSheet = ({
             </div>
           </section>
 
+          <section className="sheet-section">
+            <h3 className="sheet-section-title">Terms and permissions</h3>
+
+            {acceptanceStatus === 'loading' && (
+              <p className="field-hint">Loading acceptance links...</p>
+            )}
+            {acceptanceStatus === 'failed' && (
+              <p className="field-error">
+                We could not load the acceptance links. Please try again.
+              </p>
+            )}
+
+            <label className="field-check">
+              <input
+                type="checkbox"
+                checked={values.acceptTerms}
+                onChange={handleCheckbox('acceptTerms')}
+              />
+              I accept the{' '}
+              <a href={acceptancePermalink} target="_blank" rel="noreferrer">
+                terms and conditions
+              </a>
+              .
+            </label>
+            {errors.acceptTerms && (
+              <p className="field-error">{errors.acceptTerms}</p>
+            )}
+
+            <label className="field-check">
+              <input
+                type="checkbox"
+                checked={values.acceptPersonalAuth}
+                onChange={handleCheckbox('acceptPersonalAuth')}
+              />
+              I accept the{' '}
+              <a href={personalAuthPermalink} target="_blank" rel="noreferrer">
+                personal data policy
+              </a>
+              .
+            </label>
+            {errors.acceptPersonalAuth && (
+              <p className="field-error">{errors.acceptPersonalAuth}</p>
+            )}
+          </section>
+
           <div className="sheet-actions">
-            <button className="sheet-continue" type="button" onClick={handleContinue}>
+            <button
+              className="sheet-continue"
+              type="button"
+              onClick={handleContinue}
+              disabled={!canContinue}
+            >
               Continue
             </button>
           </div>
