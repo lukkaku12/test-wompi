@@ -1,11 +1,11 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import '@testing-library/jest-dom/vitest'
+import '@testing-library/jest-dom'
 import { configureStore } from '@reduxjs/toolkit'
 import { Provider } from 'react-redux'
-import { describe, expect, it, vi } from 'vitest'
 import CheckoutFormSheet from '../components/CheckoutFormSheet'
 import formReducer from '../store/slices/formSlice'
 import wompiReducer from '../store/slices/wompiSlice'
+import type { WompiState } from '../store/slices/wompiSlice'
 
 const renderSheet = (onClose = () => {}, onContinue = () => {}) => {
   const store = configureStore({
@@ -23,7 +23,7 @@ const renderSheet = (onClose = () => {}, onContinue = () => {}) => {
         tokenStatus: 'idle',
         cardToken: null,
         errorMessage: null,
-      },
+      } as WompiState,
     },
   })
 
@@ -39,6 +39,9 @@ const renderSheet = (onClose = () => {}, onContinue = () => {}) => {
 describe('CheckoutFormSheet', () => {
   it('shows validation errors when continuing with empty fields', () => {
     renderSheet()
+
+    fireEvent.click(screen.getByLabelText(/terms and conditions/i))
+    fireEvent.click(screen.getByLabelText(/personal data policy/i))
 
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
 
@@ -56,7 +59,7 @@ describe('CheckoutFormSheet', () => {
   })
 
   it('calls onClose when the close button is clicked', () => {
-    const onClose = vi.fn()
+    const onClose = jest.fn()
     renderSheet(onClose)
 
     fireEvent.click(screen.getByRole('button', { name: 'Close' }))
@@ -65,7 +68,7 @@ describe('CheckoutFormSheet', () => {
   })
 
   it('calls onContinue when the form is valid', () => {
-    const onContinue = vi.fn()
+    const onContinue = jest.fn()
     renderSheet(undefined, onContinue)
 
     fireEvent.change(screen.getByLabelText('Name on card'), {

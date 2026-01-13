@@ -1,15 +1,16 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
 import { getAcceptance, tokenizeCard } from '../services/api/wompi'
 
 describe('wompi api', () => {
+  const originalFetch = global.fetch
+
   afterEach(() => {
-    vi.unstubAllGlobals()
+    global.fetch = originalFetch
   })
 
   it('fetches acceptance data', async () => {
     const response = {
       ok: true,
-      json: vi.fn().mockResolvedValue({
+      json: jest.fn().mockResolvedValue({
         data: {
           presigned_acceptance: {
             acceptance_token: 'acceptance-token',
@@ -21,11 +22,11 @@ describe('wompi api', () => {
           },
         },
       }),
-      text: vi.fn().mockResolvedValue(''),
+      text: jest.fn().mockResolvedValue(''),
     }
 
-    const fetchMock = vi.fn().mockResolvedValue(response as Response)
-    vi.stubGlobal('fetch', fetchMock)
+    const fetchMock = jest.fn().mockResolvedValue(response as unknown as Response)
+    global.fetch = fetchMock as typeof fetch
 
     const data = await getAcceptance('pub-test')
 
@@ -36,16 +37,16 @@ describe('wompi api', () => {
   it('tokenizes the card', async () => {
     const response = {
       ok: true,
-      json: vi.fn().mockResolvedValue({
+      json: jest.fn().mockResolvedValue({
         data: {
           id: 'card-token',
         },
       }),
-      text: vi.fn().mockResolvedValue(''),
+      text: jest.fn().mockResolvedValue(''),
     }
 
-    const fetchMock = vi.fn().mockResolvedValue(response as Response)
-    vi.stubGlobal('fetch', fetchMock)
+    const fetchMock = jest.fn().mockResolvedValue(response as unknown as Response)
+    global.fetch = fetchMock as typeof fetch
 
     const data = await tokenizeCard('pub-test', {
       cardNumber: '4111111111111111',

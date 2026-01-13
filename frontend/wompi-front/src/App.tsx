@@ -21,6 +21,7 @@ import {
   recoverTransactionThunk,
   resetTransaction,
 } from './store/slices/transactionSlice'
+import { getEnv } from './services/env'
 
 function App() {
   const dispatch = useAppDispatch()
@@ -40,7 +41,6 @@ function App() {
   const personalAuthToken = useAppSelector(
     (state) => state.wompi.personalAuthToken,
   )
-  const cardToken = useAppSelector((state) => state.wompi.cardToken)
   const { transactionId, pollStatus } = useAppSelector(
     (state) => state.transaction,
   )
@@ -50,7 +50,7 @@ function App() {
   const initialTransactionId = useRef(transactionId)
   const selectedProduct =
     products.find((product) => product.id === selectedProductId) ?? null
-  const publicKey = import.meta.env.VITE_PUBLIC_KEY ?? ''
+  const publicKey = getEnv().VITE_PUBLIC_KEY ?? ''
 
   const stepLabel =
     currentStep >= 4

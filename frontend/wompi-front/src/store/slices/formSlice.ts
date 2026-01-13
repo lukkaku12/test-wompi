@@ -66,10 +66,10 @@ const formSlice = createSlice({
   reducers: {
     setField(
       state,
-      action: PayloadAction<{ field: keyof FormValues; value: string | boolean }>
+      action: PayloadAction<{ field: keyof FormValues; value: FormValues[keyof FormValues] }>
     ) {
       // Update one input as the user types.
-      state.values[action.payload.field] = action.payload.value;
+      (state.values as any)[action.payload.field] = action.payload.value
     },
     setErrors(state, action: PayloadAction<FormErrors>) {
       // Save all validation errors at once.

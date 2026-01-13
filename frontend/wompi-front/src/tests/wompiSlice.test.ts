@@ -1,18 +1,18 @@
 import { configureStore } from '@reduxjs/toolkit'
-import { describe, expect, it, vi } from 'vitest'
 import wompiReducer, {
   createCardToken,
   fetchAcceptance,
+  resetWompi,
 } from '../store/slices/wompiSlice'
 import { getAcceptance, tokenizeCard } from '../services/api/wompi'
 
-vi.mock('../services/api/wompi', () => ({
-  getAcceptance: vi.fn(),
-  tokenizeCard: vi.fn(),
+jest.mock('../services/api/wompi', () => ({
+  getAcceptance: jest.fn(),
+  tokenizeCard: jest.fn(),
 }))
 
-const getAcceptanceMock = vi.mocked(getAcceptance)
-const tokenizeCardMock = vi.mocked(tokenizeCard)
+const getAcceptanceMock = jest.mocked(getAcceptance)
+const tokenizeCardMock = jest.mocked(tokenizeCard)
 
 describe('wompiSlice', () => {
   it('returns the initial state', () => {
@@ -64,5 +64,41 @@ describe('wompiSlice', () => {
     const state = store.getState().wompi
     expect(state.tokenStatus).toBe('succeeded')
     expect(state.cardToken).toBe('card-token')
+  })
+
+  it('handles acceptance errors', async () => {
+    getAcceptanceMock.mockRejectedValue(new Error('acceptance failed'))
+
+    const store = configureStore({
+      reducer: {
+        wompi: wompiReducer,
+      },
+    })
+
+    await store.dispatch(fetchAcceptance('pub-test'))
+
+    const state = store.getState().wompi
+    expect(state.acceptanceStatus).toBe('failed')
+    expect(state.errorMessage).toBe('acceptance failed')
+  })
+
+  it('resets card token state', () => {
+    const populated = wompiReducer(
+      {
+        acceptanceToken: 'acc',
+        personalAuthToken: 'auth',
+        acceptancePermalink: 'terms',
+        personalAuthPermalink: 'personal',
+        acceptanceStatus: 'succeeded',
+        tokenStatus: 'succeeded',
+        cardToken: 'card',
+        errorMessage: 'oops',
+      },
+      resetWompi(),
+    )
+
+    expect(populated.tokenStatus).toBe('idle')
+    expect(populated.cardToken).toBeNull()
+    expect(populated.errorMessage).toBeNull()
   })
 })

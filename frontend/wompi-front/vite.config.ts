@@ -8,10 +8,6 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
-    test: {
-      environment: 'jsdom',
-      globals: true,
-    },
     server: {
       proxy: {
         // Proxy Wompi calls so we don't hit CORS in dev.

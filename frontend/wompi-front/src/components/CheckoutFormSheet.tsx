@@ -8,6 +8,7 @@ import {
 } from '../store/slices/formSlice'
 import { detectCardBrand, validateForm } from '../utils/validators'
 import { fetchAcceptance } from '../store/slices/wompiSlice'
+import { getEnv } from '../services/env'
 
 type CheckoutFormSheetProps = {
   isOpen: boolean
@@ -30,7 +31,7 @@ const CheckoutFormSheet = ({
     personalAuthToken,
   } = useAppSelector((state) => state.wompi)
   const brand = detectCardBrand(values.cardNumber)
-  const publicKey = import.meta.env.VITE_PUBLIC_KEY ?? ''
+  const publicKey = getEnv().VITE_PUBLIC_KEY ?? ''
   const canContinue =
     values.acceptTerms &&
     values.acceptPersonalAuth &&
@@ -53,7 +54,7 @@ const CheckoutFormSheet = ({
   }
 
   const handleChange =
-    (field: keyof typeof values) =>
+    (field: Exclude<keyof typeof values, 'acceptTerms' | 'acceptPersonalAuth'>) =>
     (event: { target: { value: string } }) => {
       dispatch(setField({ field, value: event.target.value }))
 

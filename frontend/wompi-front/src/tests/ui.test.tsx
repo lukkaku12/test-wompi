@@ -1,6 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
-import '@testing-library/jest-dom/vitest'
+import '@testing-library/jest-dom'
 import ProductScreen from '../components/ProductScreen'
 import type { Product } from '../services/api/products'
 

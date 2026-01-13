@@ -1,5 +1,4 @@
 import { configureStore } from '@reduxjs/toolkit'
-import { describe, expect, it, vi } from 'vitest'
 import checkoutReducer, {
   fetchProducts,
   setCurrentStep,
@@ -7,11 +6,11 @@ import checkoutReducer, {
 } from '../store/slices/checkoutSlice'
 import { getProducts, type Product } from '../services/api/products'
 
-vi.mock('../services/api/products', () => ({
-  getProducts: vi.fn(),
+jest.mock('../services/api/products', () => ({
+  getProducts: jest.fn(),
 }))
 
-const getProductsMock = vi.mocked(getProducts)
+const getProductsMock = jest.mocked(getProducts)
 
 describe('checkoutSlice', () => {
   it('returns the initial state', () => {

@@ -1,12 +1,11 @@
-import { describe, expect, it, vi } from 'vitest'
 import { getProducts } from '../services/api/products'
 import { client } from '../services/api/client'
 
-vi.mock('../services/api/client', () => ({
-  client: vi.fn(),
+jest.mock('../services/api/client', () => ({
+  client: jest.fn(),
 }))
 
-const clientMock = vi.mocked(client)
+const clientMock = jest.mocked(client)
 
 describe('products API', () => {
   it('calls the products endpoint', async () => {
