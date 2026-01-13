@@ -1,6 +1,7 @@
 type ViteEnv = {
   VITE_API_BASE_URL?: string;
   VITE_PUBLIC_KEY?: string;
+  VITE_BASE_URL?: string;
 };
 
 export function getEnv(): ViteEnv {
@@ -12,5 +13,6 @@ export function getEnv(): ViteEnv {
   return {
     VITE_API_BASE_URL: process.env.VITE_API_BASE_URL,
     VITE_PUBLIC_KEY: process.env.VITE_PUBLIC_KEY,
+    VITE_BASE_URL: process.env.VITE_BASE_URL,
   };
 }

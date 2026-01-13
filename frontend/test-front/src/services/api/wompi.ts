@@ -5,11 +5,15 @@ type AcceptanceInfo = {
   personalAuthPermalink: string
 }
 
+import { getEnv } from '../env'
+
 type CardTokenInfo = {
   cardToken: string
 }
 
-const API_BASE = '/wompi'
+const API_BASE =
+  getEnv().VITE_BASE_URL?.toString().replace(/\/$/, '') ??
+  'https://api-sandbox.co.uat.wompi.dev/v1'
 
 const toJson = async (response: Response) => {
   if (!response.ok) {
@@ -22,7 +26,7 @@ const toJson = async (response: Response) => {
 
 // GET /v1/merchants/{PUBLIC_KEY}
 export const getAcceptance = async (publicKey: string): Promise<AcceptanceInfo> => {
-  const response = await fetch(`${API_BASE}/v1/merchants/${publicKey}`)
+  const response = await fetch(`${API_BASE}/merchants/${publicKey}`)
   const data = await toJson(response)
 
   const acceptance = data?.data?.presigned_acceptance
@@ -54,7 +58,7 @@ export const tokenizeCard = async (
     card_holder: card.cardName,
   }
 
-  const response = await fetch(`${API_BASE}/v1/tokens/cards`, {
+  const response = await fetch(`${API_BASE}/tokens/cards`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

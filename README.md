@@ -273,6 +273,16 @@ What was added:
 - The controller translates `Result` errors into HTTP responses in
   `backend/wompi-backend/src/modules/transaction/interfaces/transaction.controller.ts`
 
+## Deployment
+
+Frontend:
+- Hosted on S3 static website hosting.
+- URL: http://wompi-frontend.s3-website-us-east-1.amazonaws.com/
+
+Backend:
+- Deployed on EC2.
+- Database hosted on RDS (PostgreSQL).
+
 Why this helps:
 - Business flow is explicit: each step returns either success or a known error.
 - No exceptions inside use cases, making the application layer pure and predictable.

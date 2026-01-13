@@ -1,9 +1,5 @@
-import { getEnv } from '../env'
-
 // Base URL for the backend API.
-const API_BASE_URL =
-  getEnv().VITE_API_BASE_URL?.toString().replace(/\/$/, '') ??
-  'http://localhost:3000'
+const API_BASE_URL = 'http://13.221.42.133:3000'
 
 // Small fetch helper that returns JSON or throws an error.
 export async function client<T = unknown>(

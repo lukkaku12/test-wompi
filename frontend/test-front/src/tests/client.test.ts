@@ -21,7 +21,7 @@ describe('client', () => {
 
     expect(data).toEqual({ ok: true })
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:3000/products',
+      'http://13.221.42.133:3000/products',
       expect.objectContaining({
         headers: expect.objectContaining({
           Accept: 'application/json',

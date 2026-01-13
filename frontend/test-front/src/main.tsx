@@ -5,6 +5,8 @@ import './index.css'
 import App from './App'
 import { store } from './store'
 
+(globalThis as any).__VITE_ENV__ = import.meta.env
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>
