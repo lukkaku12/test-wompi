@@ -15,7 +15,7 @@ backend/payment-backend/   NestJS API (TypeORM + PostgreSQL)
 frontend/                  Frontend app
 ```
 
-The backend lives in `backend/backend`.
+The backend lives in `backend/test-backend`.
 
 ## Backend module structure
 
